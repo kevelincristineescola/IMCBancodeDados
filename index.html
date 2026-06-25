@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de IMC</title>
+    <style>
+        /* Estilização básica do corpo da página para centralizar o conteúdo */
+        body { font-family: Arial, sans-serif; margin: 50px; background-color: #f4f4f9; text-align: center; }
+        /* Estilização do container do formulário */
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); display: inline-block; }
+        /* Estilização dos campos de entrada de dados */
+        input { margin: 10px; padding: 8px; width: 200px; display: block; }
+        /* Estilização do botão de envio */
+        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        /* Altera a cor do botão quando o mouse passa por cima */
+        button:hover { background-color: #218838; }
+        /* Estilização do bloco de exibição de resultados */
+        .resultado { margin-top: 20px; font-weight: bold; font-size: 1.2em; color: #333; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Calculadora de IMC</h2>
+        <input type="number" id="peso" placeholder="Peso (kg). Ex: 70.5" step="0.1" min="1">
+        <input type="number" id="altura" placeholder="Altura (m). Ex: 1.75" step="0.01" min="1">
+        <button onclick="enviarDados()">Calcular</button>
+
+        <div class="resultado" id="resultado"></div>
+    </div>
+
+    <script>
+        // Função assíncrona responsável por capturar os dados, enviar para o Back-end e tratar a resposta
+        async function enviarDados() {
+            // Captura o valor digitado no campo de ID 'peso'
+            const peso = document.getElementById('peso').value;
+            // Captura o valor digitado no campo de ID 'altura'
+            const altura = document.getElementById('altura').value;
+
+            // Validação simples para conferir se ambos os campos foram devidamente preenchidos
+            if (!peso || !altura) {
+                alert("Por favor, preencha todos os campos corretamente.");
+                return;
+            }
+
+            try {
+                // Utiliza a API fetch para fazer uma requisição HTTP POST para o endereço do nosso Back-end Flask
+                const resposta = await fetch('http://127.0.0.1:5000/calcular', {
+                    method: 'POST', // Define o método de envio como POST
+                    headers: {
+                        'Content-Type': 'application/json' // Indica que o corpo da requisição está no formato JSON
+                    },
+                    // Converte o objeto Javascript com os valores informados em uma string JSON para o envio
+                    body: JSON.stringify({ peso: peso, altura: altura })
+                });
+
+                // Aguarda a resposta do servidor e a converte de volta para um objeto JavaScript
+                const dados = await resposta.json();
+
+                // Atualiza o conteúdo HTML da div 'resultado' mostrando os valores retornados pelo servidor
+                document.getElementById('resultado').innerHTML = `
+                    <p>Seu IMC: ${dados.imc}</p>
+                    <p>Classificação: ${dados.classificacao}</p>
+                `;
+            } catch (erro) {
+                // Caso ocorra algum erro na comunicação (como o servidor desligado), mostra um alerta no navegador
+                console.error("Erro na integração:", erro);
+                alert("Não foi possível conectar ao servidor Back-end.");
+            }
+        }
+    </script>
+</body>
+</html>
